@@ -1,3 +1,0 @@
-F:/GTK3/img_viewer/build/CMakeFiles/opencv_wrapper.dir
-F:/GTK3/img_viewer/build/CMakeFiles/ALL_BUILD.dir
-F:/GTK3/img_viewer/build/CMakeFiles/ZERO_CHECK.dir
