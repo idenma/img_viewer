@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   version="1.1"
+   id="svg1"
+   width="960"
+   height="960"
+   viewBox="0 0 48 48"
+   sodipodi:docname="right.svg"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect1"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,6.5,0,1 @ F,0,0,1,0,6.5,0,1 @ F,0,0,1,0,6.5,0,1"
+       radius="130"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+  </defs>
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.42951213"
+     inkscape:cx="-44.236236"
+     inkscape:cy="152.4986"
+     inkscape:window-width="1920"
+     inkscape:window-height="1177"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <path
+     id="rect1"
+     style="opacity:1;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#f6b518;stroke-width:0.150047;stroke-linecap:square;stroke-linejoin:round;paint-order:markers stroke fill"
+     d="m 44,6 v 37.5 a 3.7090964,3.7090964 150.28961 0 1 -5.596022,3.193259 L 5.5960224,27.306741 a 3.7292985,3.7292985 90.734686 0 1 0.082953,-6.468898 L 38.321024,2.6621569 A 3.8204039,3.8204039 30.445072 0 1 44,6 Z"
+     sodipodi:nodetypes="cccc"
+     inkscape:path-effect="#path-effect1"
+     inkscape:original-d="M 44,-0.5 V 50 L 0,24 Z"
+     inkscape:label="right"
+     transform="matrix(-1,0,0,1,47.766298,0)" />
+</svg>
