@@ -64,11 +64,18 @@ cp -r ../data ./
 
 CMake オプション `ENABLE_IMG_VIEWER=ON` で有効化します。MSYS2 で `gtk3/vala/libgee/librsvg/cairo` が導入済みであることが前提です。
 
+方法A（推奨）: MSYS2 MinGW64 シェルで実行
 ```bash
 # リポジトリ直下
 mkdir -p build && cd build
 cmake -G "MinGW Makefiles" -DENABLE_IMG_VIEWER=ON ..
 cmake --build . --config Release -j
+```
+
+方法B: Windows PowerShell / cmd からバッチで実行（MSYS2 を F:\\msys64 にインストールした場合）
+```bat
+REM リポジトリ直下
+scripts\build_img_viewer_mingw.bat
 ```
 
 出力
