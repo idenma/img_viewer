@@ -1,0 +1,1 @@
+/* dummy compilation unit for linking Vala objects */
