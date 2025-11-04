@@ -24,13 +24,23 @@ class Thumbnailer {
 
             case "foldergrid":
                 int folder_size = target_size;
-                //Gdk.Pixbuf? img_pixbuf = new Gdk.Pixbuf.from_file(path);
+                // 顔クロップ試行 → 失敗時はフォルダアイコンでマスク合成にフォールバック
                 string face_crop = Thumbnailer.opencv_face_crop(path);
-                Gdk.Pixbuf? img_pixbuf = new Pixbuf.from_file(face_crop);
+                Gdk.Pixbuf? img_pixbuf = null;
+                try {
+                    img_pixbuf = new Pixbuf.from_file(face_crop);
+                } catch (GLib.Error e) {
+                    img_pixbuf = null;
+                }
 
-        //        if (img_pixbuf == null) {
-        //            img_pixbuf = SvgUtils.render_svg(null,"icon/folder.svg", folder_size, folder_size);
-        //        }
+                if (img_pixbuf == null) {
+                    // 画像が確保できない場合は、フォルダSVGでプレースホルダを生成
+                    try {
+                        img_pixbuf = SvgUtils.render_svg(null, "icon/folder.svg", folder_size, folder_size);
+                    } catch (Error e) {
+                        img_pixbuf = null;
+                    }
+                }
 
                 if (img_pixbuf != null) {
                     img_pixbuf = CairoUtils.scale_pixbuf(img_pixbuf, folder_size, folder_size);

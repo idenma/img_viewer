@@ -20,15 +20,33 @@ int main(int argc, char** argv) {
 
     std::cout << "Loaded image: " << imagePath << " (" << img.cols << "x" << img.rows << ")\n";
 
-    // DNNモデルのパス
-    std::string modelFile = "F:/GTK3/img_viewer/data/opencv_face_detector_uint8.pb";
-    std::string configFile = "F:/GTK3/img_viewer/data/opencv_face_detector.pbtxt";
-
+    // DNNモデルのパス（相対 data/ を優先し、Caffe→TensorFlow の順で試す）
     cv::dnn::Net net;
-    try {
-        net = cv::dnn::readNetFromTensorflow(modelFile, configFile);
-    } catch (...) {
-        std::cerr << "⚠️ DNNモデルが読み込めません。Haar/LBP分類器を使用します。\n";
+    bool dnnLoaded = false;
+    {
+        // 1) Caffe (res10 + deploy.prototxt)
+        std::string caffeModel = "data/res10_300x300_ssd_iter_140000.caffemodel";
+        std::string caffeProto = "data/deploy.prototxt";
+        try {
+            net = cv::dnn::readNetFromCaffe(caffeProto, caffeModel);
+            dnnLoaded = !net.empty();
+        } catch (...) {
+            dnnLoaded = false;
+        }
+    }
+    if (!dnnLoaded) {
+        // 2) TensorFlow (pb + pbtxt)
+        std::string tfModel = "data/opencv_face_detector_uint8.pb";
+        std::string tfConfig = "data/opencv_face_detector.pbtxt"; // 無ければ失敗
+        try {
+            net = cv::dnn::readNetFromTensorflow(tfModel, tfConfig);
+            dnnLoaded = !net.empty();
+        } catch (...) {
+            dnnLoaded = false;
+        }
+        if (!dnnLoaded) {
+            std::cerr << "⚠️ DNNモデルが読み込めません。Haar/LBP分類器にフォールバックします。\n";
+        }
     }
 
     int width = img.cols;
@@ -39,7 +57,7 @@ int main(int argc, char** argv) {
     float bestConfidence = 0.0f;
     cv::Mat bestFace;
 
-    if (!net.empty()) {
+    if (dnnLoaded && !net.empty()) {
         cv::Mat blob = cv::dnn::blobFromImage(img, 1.0, cv::Size(300, 300),
                                               cv::Scalar(104.0, 177.0, 123.0), false, false);
         net.setInput(blob);
