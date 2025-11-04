@@ -33,7 +33,7 @@ class ImageGridView : BaseWindow {
 
             int i = k / cols;
             int j = k % cols;
-            string file_path = folder_name + "\\" + file_name[k];
+            string file_path = Path.build_filename(folder_name, file_name[k]);
             stderr.printf("loading: %s\n", file_path);
 
             ImageItem? thumb = Thumbnailer.create_image_thumbnail(file_path, target_size, view_type);

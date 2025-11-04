@@ -15,7 +15,7 @@ class BaseWindow : Object {
 
     public BaseWindow(string folder_name, string[] names, int target_size) {
         this.view_type = "";
-        this.target_size = 0;
+        this.target_size = target_size;
         scrolled = new Gtk.ScrolledWindow(null, null);
        instance_id = RandomGenerator.between(0, 2147483647);
        print("instance ID: %u\n", instance_id);

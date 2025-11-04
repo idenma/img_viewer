@@ -32,7 +32,7 @@ class ImageFlowView : BaseWindow {
         idle_id = GLib.Idle.add(() => {
             if (k >= count) return false;
 
-            string image_path = folder_name + "\\" + file_name[k];
+            string image_path = Path.build_filename(folder_name, file_name[k]);
             //stderr.printf("loading(flow): %s\n", image_path);
 
             ImageItem? thumb = Thumbnailer.create_image_thumbnail(image_path, target_size, view_type);

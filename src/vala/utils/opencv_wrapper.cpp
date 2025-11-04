@@ -11,11 +11,16 @@
 // target_width, target_height: 出力サイズ
 extern "C" __declspec(dllexport)
 int detect_faces(const char* image_path, const char* output_dir, int target_width, int target_height) {
-    // 顔検出用分類器（Haar Cascade）
+    // 顔検出用分類器（Haar Cascade）: まずはリポジトリ相対 data/ を試す
     cv::CascadeClassifier face_cascade;
-    if (!face_cascade.load("F:/vcpkg/installed/x64-windows/share/opencv4/haarcascades/haarcascade_frontalface_default.xml")) {
-        fprintf(stderr, "Error: Could not load Haar cascade XML.\n");
-        return -1;
+    const char* rel_xml = "data/haarcascade_frontalface_default.xml";
+    if (!face_cascade.load(rel_xml)) {
+        // 互換性のためのフォールバック（従来の絶対パス）。将来的に削除予定。
+        const char* legacy_xml = "F:/vcpkg/installed/x64-windows/share/opencv4/haarcascades/haarcascade_frontalface_default.xml";
+        if (!face_cascade.load(legacy_xml)) {
+            fprintf(stderr, "Error: Could not load Haar cascade XML from '%s' or legacy path.\n", rel_xml);
+            return -1;
+        }
     }
 
     // 入力画像を読み込み
