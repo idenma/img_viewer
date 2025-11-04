@@ -67,28 +67,37 @@ class Thumbnailer {
     }
 
     public static string opencv_face_crop(string image_path) {
-
-        string input = image_path;
-        string output = "face_result.png";
-        int count = OpenCVWrapper.detect_faces(input, output, 300, 300);
-    
-        if (count > 0) {
-            try {
-                return output;
-            } catch (GLib.Error e) {
-                //なんもしない
+        // OpenCV 側は第2引数を「出力ディレクトリ」として扱う実装
+        // ここではリポジトリ直下の output_faces/ を用いる（.gitignore 済み）
+        string out_dir = "output_faces";
+        try {
+            var out_folder = File.new_for_path(out_dir);
+            if (!out_folder.query_exists()) {
+                out_folder.make_directory_with_parents();
             }
-        } else {
-            try {
-                return image_path;
-            } catch (GLib.Error e) {
-                //なんもしない
+        } catch (Error e) {
+            stderr.printf("Failed to ensure output dir '%s': %s\n", out_dir, e.message);
+            // ディレクトリが用意できない場合は元画像を返す
+            return image_path;
+        }
+
+        int count = OpenCVWrapper.detect_faces(image_path, out_dir, 300, 300);
+
+        // 1枚以上検出できたら、face_0.png を代表として返す
+        if (count > 0) {
+            string first = Path.build_filename(out_dir, "face_0.png");
+            if (FileUtils.test(first, FileTest.EXISTS)) {
+                return first;
+            }
+            // 念のため face_1.png ... の存在も探す
+            for (int i = 1; i < count; i++) {
+                string alt = Path.build_filename(out_dir, "face_%d.png".printf(i));
+                if (FileUtils.test(alt, FileTest.EXISTS)) return alt;
             }
         }
 
-        print("検出された顔の数: %d\n", count);
-        print("結果画像: %s\n", output);
-
+        // 検出できない/見つからない場合は元画像を返す
+        return image_path;
     }
 
 }
