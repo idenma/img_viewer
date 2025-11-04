@@ -1,0 +1,40 @@
+# Build directories
+build/
+build_msvc/
+build_opencv/
+build_vala/
+
+# CMake artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.cmake.api/
+
+# MSVC/Visual Studio
+.vs/
+*.vcxproj.user
+*.sln*
+*.vcxproj*
+*.pdb
+*.ilk
+
+# Binaries / libs
+*.exe
+*.dll
+*.lib
+*.exp
+*.obj
+*.o
+*.a
+
+# Logs and temp
+*.log
+*.tmp
+*.cache
+
+# Generated outputs
+output_faces/
+face_*.png
+anime_face_*.png
+best_face.png
+result.png
