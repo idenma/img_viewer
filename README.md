@@ -46,18 +46,11 @@ cmake --build . --config Release -j
 出力
 - `build/face_detect.exe`
 
-実行例（注意: data/ への相対参照）
-- `face_detect` は実行ディレクトリから `data/` を相対参照します。以下のいずれかで実行してください。
-  - a) リポジトリルートに戻って実行: `./build/face_detect.exe path/to/image.jpg`
-  - b) `build/` に `data/` フォルダをコピーしてから `build/` で実行
+実行例
+- `face_detect` は実行ファイル／ビルドディレクトリ／カレントディレクトリから順に `data/` を探索します。コピーは不要です。リポジトリルートで以下を実行してください。
 
 ```bash
-# a) ルートから実行（推奨）
 ./build/face_detect.exe pola.png
-
-# b) build/ に data/ を複製してから build/ で実行
-cp -r ../data ./
-./face_detect.exe pola.png
 ```
 
 ## 2) 画像ビューア本体（Vala + GTK3）のビルド（実験的）
@@ -91,6 +84,7 @@ scripts\build_img_viewer_mingw.bat
 - Vala の CMake 統合は最小実装です。ビルドに失敗する場合は、MSYS2 のパッケージが揃っているか確認してください。
 - 実行時、OpenCV のカスケード/モデルは `data/` を相対参照します（`opencv_wrapper.cpp`）。`img_viewer.exe` の隣、または実行ディレクトリから相対で `data/` が見えるようにしてください。
 - 顔検出結果は `output_faces/` に保存されます（自動生成）。
+- 顔検出で生成された `face_*.png` や `best_face.png` をまとめて消したい場合は `scripts/cleanup_outputs.bat` を利用できます。既定では `build/` 配下をクリーンアップします。
 
 ## ディレクトリ構成（抜粋）
 

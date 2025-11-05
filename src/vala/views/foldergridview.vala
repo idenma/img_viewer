@@ -30,6 +30,25 @@ class FolderGridView : BaseWindow {
 
         thumbnailer = new Thumbnailer();
 
+        // --- レイアウト調整（モニタ幅に収める） ---
+        int cols = 10;
+        int monitor_width = get_primary_monitor_width();
+        if (monitor_width > 0) {
+            int tile_width = this.target_size + (int) grid.get_column_spacing();
+            int safe_width = monitor_width - 80; // ウィンドウ装飾ぶん余裕を確保
+            if (tile_width > 0 && safe_width > 0) {
+                int max_cols = safe_width / tile_width;
+                if (max_cols >= 1) {
+                    cols = int.min(cols, max_cols);
+                } else {
+                    cols = 1;
+                }
+
+                scrolled.set_max_content_width(safe_width);
+                scrolled.set_min_content_width(int.min(tile_width * cols, safe_width));
+            }
+        }
+
         // --- サブフォルダ取得 ---
         var subfolders = FolderScanner.get_subfolders(folder_name);
         folder_number = subfolders.size;
@@ -41,7 +60,6 @@ class FolderGridView : BaseWindow {
             return;
         }
 
-        int cols = 10;
         int k = 0;
 
         // --- Idleでフォルダアイコン生成 ---
@@ -95,5 +113,25 @@ class FolderGridView : BaseWindow {
 
     public Gtk.Widget get_widget() {
         return scrolled;
+    }
+
+    private int get_primary_monitor_width() {
+        var display = Gdk.Display.get_default();
+        if (display != null) {
+            var monitor = display.get_primary_monitor();
+            if (monitor != null) {
+                Gdk.Rectangle geometry = monitor.get_geometry();
+                if (geometry.width > 0) {
+                    return geometry.width;
+                }
+            }
+        }
+
+        var screen = Gdk.Screen.get_default();
+        if (screen != null) {
+            return screen.get_width();
+        }
+
+        return 0;
     }
 }

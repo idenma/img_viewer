@@ -12,7 +12,7 @@ class ImageGridView : BaseWindow {
 
     public ImageGridView(string folder_name, string[] file_name, int target_size) {
         base(folder_name, file_name, target_size);
-        this.target_size = 290;
+        this.target_size = 300;
         this.view_type = "grid";
         grid = new Gtk.Grid();
         int cols = 6;

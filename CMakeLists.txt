@@ -4,17 +4,17 @@ project(img_viewer C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# libc++ を明示的に指定（必要なら）
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-stdlib=libc++)
+# OpenCV は face_detect と opencv_wrapper 双方で使用（MSYS2: pkg-config 経由）
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(OPENCV QUIET opencv4)
+if(NOT OPENCV_FOUND)
+    message(FATAL_ERROR "pkg-config 経由で OpenCV(opencv4) が見つかりません。MSYS2 の MinGW64 環境で 'pacman -S mingw-w64-x86_64-opencv' を実行してインストールしてください。")
 endif()
-
-# OpenCV は face_detect と opencv_wrapper 双方で使用
-find_package(OpenCV REQUIRED)
 
 # --- C++ サンプル（従来どおり） ---
 add_executable(face_detect src/cpp/face_detect.cpp)
-target_link_libraries(face_detect PRIVATE ${OpenCV_LIBS})
+target_include_directories(face_detect PRIVATE ${OPENCV_INCLUDE_DIRS})
+target_link_libraries(face_detect PRIVATE ${OPENCV_LIBRARIES})
 
 # --- オプション: Vala アプリ本体を CMake でビルド ---
 option(ENABLE_IMG_VIEWER "Build Vala GTK3 img_viewer app" OFF)
