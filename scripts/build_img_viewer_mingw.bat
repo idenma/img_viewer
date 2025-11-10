@@ -14,7 +14,7 @@ if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 pushd "%BUILD_DIR%"
 
 cmake -G "MinGW Makefiles" -DENABLE_IMG_VIEWER=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=%MSYS2_UNIX_ROOT%/mingw64/bin/gcc.exe -DCMAKE_CXX_COMPILER=%MSYS2_UNIX_ROOT%/mingw64/bin/g++.exe .. || goto :error_pop
-cmake --build . --config Release -j || goto :error_pop
+cmake --build . --config Release -j|| goto :error_pop
 
 popd
 

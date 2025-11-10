@@ -3,10 +3,8 @@ using Gee;
 
 // === サブフォルダと画像ファイルを列挙するユーティリティ ===
 public class FolderScanner {
-    // サブフォルダ一覧を取得
     public static Gee.ArrayList<string> get_subfolders(string folder_name) {
         var subfolders = new Gee.ArrayList<string>();
-
         try {
             var dir = Dir.open(folder_name, 0);
             string? nm;
@@ -23,23 +21,14 @@ public class FolderScanner {
         return subfolders;
     }
 
-    // 画像ファイル一覧を取得
     public static Gee.ArrayList<string> get_image_files(string folder_name) {
         var files = new Gee.ArrayList<string>();
-        string[] exts = { ".png", ".jpg", ".jpeg", ".jfif", ".webp", ".bmp" };
-
         try {
             var dir = Dir.open(folder_name, 0);
             string? fn;
             while ((fn = dir.read_name()) != null) {
                 if (fn == "." || fn == "..") continue;
-                string lfn = fn.down();
-                foreach (var ext in exts) {
-                    if (lfn.has_suffix(ext)) {
-                        files.add(fn);
-                        break;
-                    }
-                }
+                files.add(fn);
             }
         } catch (Error e) {
             stderr.printf("FolderScanner: failed to read images: %s\n", e.message);

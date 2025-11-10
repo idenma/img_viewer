@@ -4,62 +4,20 @@ using Gdk;
 using Cairo;
 using Rsvg;
 using img_viewer.utils;
+#if HAVE_OPENCV_FACE
 using OpenCVWrapper;
+#endif
 
 class Thumbnailer {
 
     public static ImageItem? create_image_thumbnail(string path, int target_size, string view_type) {
-        try {
-            var imageitem = new ImageItem(path, view_type);
-
-            switch (view_type) {
-            case "grid":
-                imageitem.set_item(target_size, target_size);
-                break;
-
-            case "flow":
-                int width = (int)(target_size * imageitem.aspect_ratio);
-                imageitem.set_item(width, target_size);
-                break;
-
-            case "foldergrid":
-                int folder_size = target_size;
-                // 顔クロップ試行 → 失敗時はフォルダアイコンでマスク合成にフォールバック
-                string face_crop = Thumbnailer.opencv_face_crop(path);
-                Gdk.Pixbuf? img_pixbuf = null;
-                try {
-                    img_pixbuf = new Pixbuf.from_file(face_crop);
-                } catch (GLib.Error e) {
-                    img_pixbuf = null;
-                }
-
-                if (img_pixbuf == null) {
-                    // 画像が確保できない場合は、フォルダSVGでプレースホルダを生成
-                    var placeholder = SvgUtils.render_svg("icon/folder.svg", folder_size, folder_size);
-                    if (placeholder != null) {
-                        return ImageItem.create_from_pixbuf(placeholder, GLib.Path.get_basename(path), "foldergrid");
-                    }
-                    break;
-                }
-
-                var fitted = fit_pixbuf_to_square(img_pixbuf, folder_size);
-                var mask = SvgUtils.render_svg("icon/folder.svg", folder_size, folder_size);
-
-                if (mask != null) {
-                    var result = apply_mask_to_pixbuf(fitted, mask, folder_size, folder_size);
-                    return ImageItem.create_from_pixbuf(result, GLib.Path.get_basename(path), "foldergrid");
-                }
-                break;
-
-            default:
-                break;
-            }
-
-            return imageitem;
-        } catch (GLib.Error e) {
-            stderr.printf("Thumbnailer: %s\n", e.message);
-            return null;
+        if (path != null && path.length > 0 && !FileUtils.test(path, FileTest.EXISTS)) {
+            stderr.printf("Thumbnailer: missing file %s\n", path);
         }
+
+        var item = new ImageItem("", view_type);
+        item.set_placeholder(target_size, target_size, "(No Image)");
+        return item;
     }
 
     public static Gdk.Pixbuf? apply_mask_to_pixbuf(Gdk.Pixbuf img, Gdk.Pixbuf mask, int width, int height) {
@@ -84,9 +42,9 @@ class Thumbnailer {
             return CairoUtils.scale_pixbuf(src, size, size);
         }
 
-    double scale_x = (double) size / src_width;
-    double scale_y = (double) size / src_height;
-    double scale = scale_x < scale_y ? scale_x : scale_y;
+        double scale_x = (double) size / src_width;
+        double scale_y = (double) size / src_height;
+        double scale = scale_x < scale_y ? scale_x : scale_y;
         int scaled_width = (int) Math.round(src_width * scale);
         int scaled_height = (int) Math.round(src_height * scale);
         if (scaled_width <= 0) scaled_width = 1;
@@ -102,6 +60,7 @@ class Thumbnailer {
         return result;
     }
 
+#if HAVE_OPENCV_FACE
     public static string opencv_face_crop(string image_path) {
         // OpenCV 側は第2引数を「出力ディレクトリ」として扱う実装
         // ここではリポジトリ直下の output_faces/ を用いる（.gitignore 済み）
@@ -119,22 +78,20 @@ class Thumbnailer {
 
         int count = OpenCVWrapper.detect_faces(image_path, out_dir, 300, 300);
 
-        // 1枚以上検出できたら、face_0.png を代表として返す
         if (count > 0) {
             string first = GLib.Path.build_filename(out_dir, "face_0.png");
             if (FileUtils.test(first, FileTest.EXISTS)) {
                 return first;
             }
-            // 念のため face_1.png ... の存在も探す
             for (int i = 1; i < count; i++) {
-                string alt = GLib.Path.build_filename(out_dir, "face_%d.png".printf(i));
-                if (FileUtils.test(alt, FileTest.EXISTS)) return alt;
+                string alternative = GLib.Path.build_filename(out_dir, "face_%d.png".printf(i));
+                if (FileUtils.test(alternative, FileTest.EXISTS)) {
+                    return alternative;
+                }
             }
         }
 
-        // 検出できない/見つからない場合は元画像を返す
         return image_path;
     }
-
+#endif
 }
-

@@ -9,12 +9,12 @@ endif()
 
 add_executable(img_viewer ${DUMMY_C})
 
-target_link_libraries(img_viewer
-    PRIVATE
-    vala_part
-    opencv_part
-    ${OpenCV_LIBS}
-)
+set(IMG_VIEWER_LIBS vala_part)
+if (ENABLE_OPENCV_FACE)
+    list(APPEND IMG_VIEWER_LIBS opencv_part ${OPENCV_LIBRARIES})
+endif()
+
+target_link_libraries(img_viewer PRIVATE ${IMG_VIEWER_LIBS})
 
 set_target_properties(img_viewer PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"

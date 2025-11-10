@@ -14,6 +14,8 @@ public class ImageItem : Gtk.EventBox {
     public Gtk.Label label;
     private Gtk.Box box; // 画像とラベルを縦に積む
     private Gdk.Pixbuf? original_pixbuf;
+    private Gdk.Pixbuf? dimmed_pixbuf;
+    private bool is_dimmed = false;
 
     // 既存のコンストラクタを修正：path が空ならファイル読み込みをスキップ
     public ImageItem(string path, string view_type) {
@@ -26,12 +28,14 @@ public class ImageItem : Gtk.EventBox {
         });
 
     // 初期値
-    this.path = "";
-    this.pixbuf = null;
-    this.image = new Gtk.Image();
-    this.width = 0;
-    this.height = 0;
-    this.aspect_ratio = 1.0; // avoid division by zero in thumbnailer
+        this.path = "";
+        this.pixbuf = null;
+        this.image = new Gtk.Image();
+        this.width = 0;
+        this.height = 0;
+        this.aspect_ratio = 1.0; // avoid division by zero in thumbnailer
+        this.dimmed_pixbuf = null;
+        this.is_dimmed = false;
 
         if (path != null && path.length > 0) {
             try {
@@ -45,21 +49,15 @@ public class ImageItem : Gtk.EventBox {
                 this.original_pixbuf = this.pixbuf;
             } catch (Error e) {
                 stderr.printf("ImageItem: failed to load %s: %s\n", path, e.message);
-                // 失敗時は透明プレースホルダを使う
-                this.pixbuf = new Gdk.Pixbuf(Gdk.Colorspace.RGB, true, 8, 128, 128);
-                this.pixbuf.fill(0x00000000);
-                this.image = new Gtk.Image.from_pixbuf(this.pixbuf);
-                this.width = this.pixbuf.get_width();
-                this.height = this.pixbuf.get_height();
-                if (this.height > 0) this.aspect_ratio = (double)this.width / (double)this.height;
-                else this.aspect_ratio = 1.0;
-                this.original_pixbuf = this.pixbuf;
+                set_placeholder(128, 128, "(No Image)");
             }
         } else {
             // 空パスは後で set_pixbuf_and_label 等で上書きされる想定
             this.pixbuf = null;
             this.image = new Gtk.Image();
             this.original_pixbuf = null;
+            this.dimmed_pixbuf = null;
+            this.is_dimmed = false;
         }
         // Create label and box container so other methods can safely pack children
         this.label = new Gtk.Label("");
@@ -80,6 +78,9 @@ public class ImageItem : Gtk.EventBox {
         if (original_pixbuf == null) {
             return;
         }
+
+        dimmed_pixbuf = null;
+        is_dimmed = false;
 
         int src_width = original_pixbuf.get_width();
         int src_height = original_pixbuf.get_height();
@@ -108,7 +109,7 @@ public class ImageItem : Gtk.EventBox {
         scaled.copy_area(0, 0, scaled_width, scaled_height, canvas, offset_x, offset_y);
 
         this.pixbuf = canvas;
-        this.image = new Gtk.Image.from_pixbuf(this.pixbuf);
+    this.image = new Gtk.Image.from_pixbuf(this.pixbuf);
         this.width = width;
         this.height = height;
         if (scaled_height > 0) this.aspect_ratio = (double) scaled_width / (double) scaled_height;
@@ -133,6 +134,31 @@ public class ImageItem : Gtk.EventBox {
         box.pack_start(image, false, false, 0);
     }
 
+    public void set_placeholder(int width, int height, string text) {
+        this.pixbuf = new Gdk.Pixbuf(Gdk.Colorspace.RGB, true, 8, width, height);
+        this.pixbuf.fill(0x333333ff);
+        this.original_pixbuf = this.pixbuf;
+        this.image = new Gtk.Image.from_pixbuf(this.pixbuf);
+        this.label.set_text(text);
+        this.width = width;
+        this.height = height;
+        this.aspect_ratio = (height > 0) ? (double) width / (double) height : 1.0;
+        this.set_size_request(width, height);
+
+        foreach (Gtk.Widget child in box.get_children()) {
+            if (child is Gtk.Image) {
+                box.remove(child);
+                break;
+            }
+        }
+        bool has_label = false;
+        foreach (Gtk.Widget child in box.get_children()) {
+            if (child == label) { has_label = true; break; }
+        }
+        if (!has_label) box.pack_start(label, false, false, 0);
+        box.pack_start(image, false, false, 0);
+    }
+
     // 外部で既に合成済みの Pixbuf を与えて表示するユーティリティ
     public void set_pixbuf_and_label(Gdk.Pixbuf pb, string label_text, int width, int height) {
         this.width = width;
@@ -140,11 +166,13 @@ public class ImageItem : Gtk.EventBox {
         this.pixbuf = pb;
         this.image = new Gtk.Image.from_pixbuf(pb);
         this.label.set_text(label_text);
-    this.original_pixbuf = pb;
-    this.width = width;
-    this.height = height;
-    if (height > 0) this.aspect_ratio = (double) width / (double) height;
-    else this.aspect_ratio = 1.0;
+        this.original_pixbuf = pb;
+        this.dimmed_pixbuf = null;
+        this.is_dimmed = false;
+        this.width = width;
+        this.height = height;
+        if (height > 0) this.aspect_ratio = (double) width / (double) height;
+        else this.aspect_ratio = 1.0;
 
         // 既存の画像ウィジェットを除去
         foreach (Gtk.Widget child in box.get_children()) {
@@ -159,6 +187,30 @@ public class ImageItem : Gtk.EventBox {
         }
         if (!has_label) box.pack_start(label, false, false, 0);
         box.pack_start(image, false, false, 0);
+    }
+
+    public void set_dimmed(bool dimmed) {
+        if (this.image == null) return;
+        if (this.pixbuf == null) return;
+
+        if (dimmed == is_dimmed) return;
+        is_dimmed = dimmed;
+
+        if (dimmed) {
+            if (dimmed_pixbuf == null) {
+                int w = pixbuf.get_width();
+                int h = pixbuf.get_height();
+                dimmed_pixbuf = new Gdk.Pixbuf(Gdk.Colorspace.RGB, true, 8, w, h);
+                dimmed_pixbuf.fill(0x00000000);
+                pixbuf.composite(dimmed_pixbuf, 0, 0, w, h, 0.0, 0.0, 1.0, 1.0, Gdk.InterpType.BILINEAR, 128);
+            }
+
+            if (dimmed_pixbuf != null) {
+                this.image.set_from_pixbuf(dimmed_pixbuf);
+            }
+        } else {
+            this.image.set_from_pixbuf(pixbuf);
+        }
     }
 
     // 新規追加: Pixbuf から直接生成するファクトリ

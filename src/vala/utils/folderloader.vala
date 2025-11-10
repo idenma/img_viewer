@@ -1,58 +1,50 @@
 using Gtk;
 using GLib;
-using Gdk;
 using Gee;
 
 // フォルダ列挙と選択を担当
 class FolderLoader {
     public static string[] get_image_names(string folder_name) {
         var list = new Gee.ArrayList<string>();
-        var exts = new Gee.ArrayList<string>();
-        exts.add(".png");
-        exts.add(".jpg");
-        exts.add(".jpeg");
-        exts.add(".bmp");
-        exts.add(".gif");
-        exts.add(".tiff");
-        exts.add(".webp");
-        Dir dir = null;
         try {
-            dir = Dir.open(folder_name, 0);
-        } catch (Error e) {
-            stderr.printf("Failed to open '%s': %s\n", folder_name, e.message);
-            return new string[0];
-        }
-
-        if (dir != null) {
-            string? nopt;
-            while ((nopt = dir.read_name()) != null) {
-                string name = nopt;
-                if (name == "." || name == "..") continue;
-                string lname = name.down();
-
-                bool matched = false;
-                foreach (string ext in exts) {
-                    if (lname.has_suffix(ext)) {
-                        matched = true;
-                        break;
-                    }
-                }
-            
-                if (matched) {
-                    list.add(name);
-                }
+            var dir = Dir.open(folder_name, 0);
+            string? entry;
+            while ((entry = dir.read_name()) != null) {
+                if (entry == "." || entry == "..") continue;
+                list.add(entry);
             }
+        } catch (Error e) {
+            stderr.printf("FolderLoader: failed to list '%s': %s\n", folder_name, e.message);
+            return new string[0];
         }
         return list.to_array();
     }
 
     public static string? choose_folder(Gtk.Window parent, string initial) {
-        var chooser = new Gtk.FileChooserDialog(
-            "フォルダを選択してください", parent,
-            Gtk.FileChooserAction.SELECT_FOLDER,
-            "Open", Gtk.ResponseType.OK,
-            "Cancel", Gtk.ResponseType.CANCEL
-        );
+        Gtk.FileChooserNative? native = null;
+        Gtk.FileChooserDialog? dialog = null;
+        Gtk.FileChooser chooser;
+
+        try {
+            native = new Gtk.FileChooserNative(
+                "フォルダを選択してください",
+                parent,
+                Gtk.FileChooserAction.SELECT_FOLDER,
+                "Open",
+                "Cancel"
+            );
+            chooser = native;
+        } catch (Error e) {
+            stderr.printf("FileChooserNative unavailable: %s\n", e.message);
+            dialog = new Gtk.FileChooserDialog(
+                "フォルダを選択してください",
+                parent,
+                Gtk.FileChooserAction.SELECT_FOLDER,
+                "Open", Gtk.ResponseType.OK,
+                "Cancel", Gtk.ResponseType.CANCEL
+            );
+            chooser = dialog;
+        }
 
         try {
             chooser.set_current_folder(initial);
@@ -61,12 +53,25 @@ class FolderLoader {
         }
 
         string? result = null;
-        int resp = chooser.run();
-        if (resp == (int) Gtk.ResponseType.OK) {
-            string? sel = chooser.get_filename();
-            if (sel != null && sel.length > 0) result = sel;
+        try {
+            int resp = (native != null) ? native.run() : dialog.run();
+            if (resp == (int) Gtk.ResponseType.OK) {
+                string? sel = chooser.get_filename();
+                if (sel != null && sel.length > 0) result = sel;
+            }
+        } catch (GLib.Error e) {
+            stderr.printf("File chooser failed: %s\n", e.message);
         }
-        chooser.destroy();
+
+        try {
+            if (native != null) {
+                native.destroy();
+            } else if (dialog != null) {
+                dialog.destroy();
+            }
+        } catch (Error e) {
+        }
+
         return result;
     }
 }

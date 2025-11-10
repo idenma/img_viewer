@@ -9,13 +9,12 @@ class FolderGridView : BaseWindow {
     public signal void folder_selected(string folder_path);
     private Gtk.Grid grid;
     private uint idle_id = 0;
-    private Thumbnailer thumbnailer;
     public int folder_number;
 
     public FolderGridView(string folder_name, string[] file_name, int target_size) {
         base(folder_name, file_name, target_size);
-        this.target_size = 300;
-        this.view_type = "foldergrid";
+    this.target_size = 300;
+    this.view_type = "folder_img";
 
         // --- UI初期化 ---
         grid = new Gtk.Grid();
@@ -27,8 +26,6 @@ class FolderGridView : BaseWindow {
         scrolled = new Gtk.ScrolledWindow(null, null);
         scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC);
         scrolled.add(grid);
-
-        thumbnailer = new Thumbnailer();
 
         // --- レイアウト調整（モニタ幅に収める） ---
         int cols = 10;
@@ -110,11 +107,6 @@ class FolderGridView : BaseWindow {
             }
         });
     }
-
-    public Gtk.Widget get_widget() {
-        return scrolled;
-    }
-
     private int get_primary_monitor_width() {
         var display = Gdk.Display.get_default();
         if (display != null) {

@@ -2,6 +2,102 @@
 #include "opencv_wrapper.h"
 #include <vector>
 #include <string>
+#include <cstdio>
+
+#ifdef _WIN32
+#include <windows.h>
+
+static std::wstring utf8_to_wstring(const std::string& utf8) {
+    if (utf8.empty()) {
+        return std::wstring();
+    }
+
+    int required = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, nullptr, 0);
+    if (required <= 0) {
+        return std::wstring();
+    }
+
+    std::wstring wide(required - 1, L'\0');
+    if (!wide.empty()) {
+        MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, &wide[0], required);
+    }
+
+    return wide;
+}
+
+static std::vector<unsigned char> read_file_utf8(const std::string& path) {
+    std::vector<unsigned char> buffer;
+    std::wstring wide = utf8_to_wstring(path);
+    if (wide.empty()) {
+        return buffer;
+    }
+
+    FILE* fp = _wfopen(wide.c_str(), L"rb");
+    if (!fp) {
+        return buffer;
+    }
+
+    if (fseek(fp, 0, SEEK_END) != 0) {
+        fclose(fp);
+        return buffer;
+    }
+
+    long size = ftell(fp);
+    if (size <= 0) {
+        fclose(fp);
+        return buffer;
+    }
+
+    buffer.resize(static_cast<size_t>(size));
+    rewind(fp);
+
+    size_t read = fread(buffer.data(), 1, buffer.size(), fp);
+    fclose(fp);
+
+    if (read != buffer.size()) {
+        buffer.clear();
+    }
+
+    return buffer;
+}
+
+static inline cv::Mat imread_utf8(const std::string& path) {
+    std::vector<unsigned char> data = read_file_utf8(path);
+    if (data.empty()) {
+        return cv::Mat();
+    }
+    return cv::imdecode(data, cv::IMREAD_COLOR);
+}
+
+static inline bool imwrite_utf8(const std::string& path, const cv::Mat& img) {
+    std::vector<unsigned char> buffer;
+    if (!cv::imencode(".png", img, buffer)) {
+        return false;
+    }
+
+    std::wstring wide = utf8_to_wstring(path);
+    if (wide.empty()) {
+        return false;
+    }
+
+    FILE* fp = _wfopen(wide.c_str(), L"wb");
+    if (!fp) {
+        return false;
+    }
+
+    size_t written = fwrite(buffer.data(), 1, buffer.size(), fp);
+    fclose(fp);
+    return written == buffer.size();
+}
+#else
+static inline cv::Mat imread_utf8(const std::string& path) {
+    return cv::imread(path, cv::IMREAD_COLOR);
+}
+
+static inline bool imwrite_utf8(const std::string& path, const cv::Mat& img) {
+    return cv::imwrite(path, img);
+}
+#endif
 
 
 
@@ -24,7 +120,7 @@ int detect_faces(const char* image_path, const char* output_dir, int target_widt
     }
 
     // 入力画像を読み込み
-    cv::Mat img = cv::imread(image_path);
+    cv::Mat img = imread_utf8(image_path);
     if (img.empty()) {
         fprintf(stderr, "Error: Could not load image: %s\n", image_path);
         return -1;
@@ -64,7 +160,9 @@ int detect_faces(const char* image_path, const char* output_dir, int target_widt
 
         // 出力ファイル名
         std::string filename = std::string(output_dir) + "/face_" + std::to_string(i) + ".png";
-        cv::imwrite(filename, resized);
+        if (!imwrite_utf8(filename, resized)) {
+            fprintf(stderr, "Error: Could not save face crop: %s\n", filename.c_str());
+        }
     }
 
     fprintf(stdout, "%zu faces detected and saved.\n", faces.size());

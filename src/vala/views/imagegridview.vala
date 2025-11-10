@@ -55,8 +55,4 @@ class ImageGridView : BaseWindow {
 
     scrolled.destroy.connect(() => { try { Source.remove(idle_id); } catch (Error e) { } });
     }
-
-    public Gtk.Widget get_widget() {
-        return scrolled;
-    }
 }

@@ -7,6 +7,8 @@ set "PATH=%MSYS2_ROOT%\mingw64\bin;%MSYS2_ROOT%\usr\bin;%PATH%"
 set "PKG_CONFIG_PATH=%MSYS2_ROOT%\mingw64\lib\pkgconfig;%MSYS2_ROOT%\mingw64\share\pkgconfig"
 set "XDG_DATA_DIRS=%MSYS2_ROOT%\mingw64\share;%MSYS2_ROOT%\usr\share;%XDG_DATA_DIRS%"
 set "GSETTINGS_SCHEMA_DIR=%MSYS2_ROOT%\mingw64\share\glib-2.0\schemas"
+set "GDK_PIXBUF_MODULEDIR=%MSYS2_ROOT%\mingw64\lib\gdk-pixbuf-2.0\2.10.0\loaders"
+set "GDK_PIXBUF_MODULE_FILE=%GDK_PIXBUF_MODULEDIR%\loaders.cache"
 
 where pkg-config >NUL 2>&1
 if %ERRORLEVEL% neq 0 (

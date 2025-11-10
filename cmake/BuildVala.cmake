@@ -22,8 +22,15 @@ list(FILTER VALA_SOURCES EXCLUDE REGEX ".*/src/vala/views/grid\\.vala$")
 list(FILTER VALA_SOURCES EXCLUDE REGEX ".*/src/vala/views/thumbnailer_copy.*\\.vala$")
 list(FILTER VALA_SOURCES EXCLUDE REGEX ".*/src/vala/utils/FaceCrop\\.vala$")
 
-set(VAPI_FILES "${CMAKE_SOURCE_DIR}/src/vala/utils/opencv_wrapper.vapi")
-set(VAPI_DIRS  "${CMAKE_SOURCE_DIR}/src/vala/utils")
+set(VAPI_FILES)
+set(VAPI_DIRS)
+set(VALA_OPTIONS --target-glib=2.0)
+
+if (ENABLE_OPENCV_FACE)
+    list(APPEND VAPI_FILES "${CMAKE_SOURCE_DIR}/src/vala/utils/opencv_wrapper.vapi")
+    list(APPEND VAPI_DIRS  "${CMAKE_SOURCE_DIR}/src/vala/utils")
+    list(APPEND VALA_OPTIONS "--define=HAVE_OPENCV_FACE")
+endif()
 
 # --- 検出されたファイル一覧を表示（デバッグ用）---
 message(STATUS "🔍 Found Vala sources:")
@@ -37,7 +44,7 @@ vala_precompile(VALA_C
     VAPIS ${VAPI_FILES}
     VAPIDIRS ${VAPI_DIRS}
     PACKAGES gtk+-3.0 gee-0.8 librsvg-2.0 cairo gdk-pixbuf-2.0
-    OPTIONS --target-glib=2.0
+    OPTIONS ${VALA_OPTIONS}
 )
 
 add_library(vala_part STATIC ${VALA_C})
